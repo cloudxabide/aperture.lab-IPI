@@ -21,7 +21,7 @@ platform:
   libvirt:
     URI: qemu+tcp://192.168.122.1/system
     network:
-      if: virbr0 
+      if: ocp4br 
 fips: false
 pullSecret: '{"auths": ...}'
 sshKey: ssh-ed25519 AAAA...

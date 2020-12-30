@@ -1,13 +1,21 @@
 # aperture.lab
-Repo for my OCP4 installation on my laptop
+Repo for my OCP4 installation on my laptop.
 
-## Assumptions:  
-You have:
-* a valid subscription to acquire OpenShift Images
-* a (reasonably) powerful machine - 
+This *should* be a start-to-finish account of how to:   
+* Install RHEL 8.x from USB (also using a Kickstart Profile - hosted in Github)
+* Deploy necessary "infrastructure components" (HTTP, DHCP, DNS, PXE)  
+* Deploy OpenShift Container Platform 4.6 UPI on a laptop running RHEL 8.x
+
+I'm kind of excited and annoyed at the same time.  I had hoped to just use the Libvirt IPI (still dev only), but I could not get it working.  
+
+## Assumptions  
+You have:  
+* a valid subscription to acquire OpenShift Images and RHEL
+* a (reasonably) powerful machine: 
   * 8 cores
   * 64GB RAM (memory is key)
   * 600GB HDD (each VM takes 120GB + bootstrap, etc..)
+* fairly decent knowledge of how to "get around" in Linux, use Git, etc...
 
 ### My Hardware
 ```

@@ -3,6 +3,9 @@
 STATUS:  Work in Progress.  Trying to make this less dependent on the host it's running on and PULL 
            everything needed for all the tasks.
 
+NOTES:  This (at this time) should be run as root.  I have opted to use qemu+ssh - this is kind of
+          ridiculous actually.  I'm not sure I care (much) to get this working using (libvirt + IPI)
+
 ## Pre-reqs 
 NOTE:  you don't *always* need to do this part.  It is here (mostly) as a reference.
  
@@ -38,32 +41,87 @@ tmux new -s OCP4install || tmux attach -t OCP4install
 
 ### Set ENVIRONMENT VARS
 ```
+SHORTDATE=`date +%F`
 THEDATE=`date +%F-%H%M`
 CLUSTER_NAME=laptop
 BASE_DOMAIN=aperture.lab
-OCP4DIR=${HOME}/OCP4/${CLUSTER_NAME}.${BASE_DOMAIN}-${THEDATE}
+OCP4_BASE=${HOME}/OCP4/
+OCP4DIR=${OCP_BASE}/${CLUSTER_NAME}.${BASE_DOMAIN}-${THEDATE}
+INSTALLER_DIR="installer-${SHORTDATE}"
+[ ! -d ${OCP4_BASE} ] && { mkdir ${OCP4_BASE}; cd $_; } || { cd ${OCP4_BASE}; }
 ```
 
+## Initial Setup (should be done once)
 ```
-mkdir ${HOME}/OCP4; cd $_
-git clone https://github.com/openshift/installer.git
-cd installer
+[ $(sysctl -n net.ipv4.ip_forward) != 1 ] && { echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-ipforward.conf; sudo sysctl -p /etc/sysctl.d/99-ipforward.conf; }
+
+systemctl stop libvirtd.service
+cp /etc/libvirt/libvirtd.conf /etc/libvirt/libvirtd.conf-${SHORTDATE}
+sed -i -e 's/#auth_tcp = "sasl"/auth_tcp = "none"/g' /etc/libvirt/libvirtd.conf
+sudo systemctl enable libvirtd-tcp.socket --now
+sudo systemctl restart libvirtd
+# Test the connection while dumping the default CIDR
+virsh --connect qemu+tcp:///system net-dumpxml default
+
+# The following should be done on a Libvirt Hypervisor on an "untrusted network"
+#  My laptop is only on my own network, therefore I am not worried about it
+sudo firewall-cmd --add-rich-rule "rule service name="libvirt" reject"
+virsh --connect qemu+tcp://192.168.122.1/system net-dumpxml default
+virsh --connect qemu+ssh://192.168.122.1/system net-dumpxml default
+sudo firewall-cmd --zone=libvirt --add-service=libvirt
+echo -e "[main]\ndns=dnsmasq" | sudo tee /etc/NetworkManager/conf.d/openshift.conf
+echo server=/${BASE_DOMAIN}/192.168.126.1 | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
+sudo systemctl reload NetworkManager
+```
+
+### SSH tweaks
+I create a separate SSH key just for this lab stuff (${HOME}/.ssh/id_rsa-aperturelab
+```
+echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-test
+```
+
+I then create an entry in my SSH config to utilize that key and connect with the "core" user
+```
+cat << EOF >> ${HOME}/.ssh/config 
+Host 192.168.126.*
+  User core
+  IdentityFile ~/.ssh/id_rsa-aperturelab
+EOF
+```
+
+## Build the Installer (with libvirt support)
+```
+git clone https://github.com/openshift/installer.git ${INSTALLER_DIR}
+cd ${INSTALLER_DIR}
 TAGS=libvirt hack/build.sh
+cd -
+```
 
+## Deploy (create) the cluster
+```
 eval "$(ssh-agent -s)"
-ssh-add /root/.ssh/id_rsa
-sed -i -e '/^10.10/d' ~/.ssh/known_hosts
-[ ! -d $OCP4DIR ] && { echo "NOTE: Making ${OCP4DIR}"; mkdir $OCP4DIR; } || echo "NOTE: $OCP4DIR already exists"
-cd ${HOME}/OCP4
-wget https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Files/install-config-libvirt-laptop.aperture.lab.yaml
+ssh-add ${HOME}/.ssh/id_rsa-aperturelab
+sed -i -e '/^192.168.126/d' ~/.ssh/known_hosts
+cd ${OCP4_BASE}
+[ ! -f install-config-libvirt-laptop.aperture.lab.yaml ] && { wget https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Files/install-config-libvirt-laptop.aperture.lab.yaml; echo "You need to update the config file found in this directory"; }
+
+# Update the following values
+#   platform.libvirt.network.if << This is the bridge that will be created
+#   baseDomain  << the domain you plan to use 
+#   compute.replicas << you *may* wish to add compute nodes?
 vi install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml
 
 # The following creates the "install-config" - copy it out of the directory
 #./openshift-install create install-config --dir=${OCP4DIR}/ --log-level=info
 # Using the previously created install config....
+[ ! -d ${OCP4DIR}/ ] && mkdir ${OCP4DIR}/
 cp install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml $OCP4DIR/install-config.yaml
-vi $_
-${HOME}/OCP4/installer/bin/openshift-install create cluster --dir=${OCP4DIR}/ --log-level=debug
+${INSTALLER_DIR}/bin/openshift-install create cluster --dir=${OCP4DIR}/ --log-level=debug
+sudo virsh net-list
+ssh -i ~/.ssh/id_rsa-aperturelab core@192.168.126.10
+  journalctl -b -f -u release-image.service -u bootkube.service
+
+
 export KUBECONFIG=${OCP4DIR}/auth/kubeconfig
 ```
 

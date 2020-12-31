@@ -46,10 +46,15 @@ SHORTDATE=`date +%F`
 THEDATE=`date +%F-%H%M`
 CLUSTER_NAME=laptop
 BASE_DOMAIN=aperture.lab
+BRIDGE_NAME="ocp4br"
 OCP4_BASE=${HOME}/OCP4/
 OCP4DIR=${OCP_BASE}/${CLUSTER_NAME}.${BASE_DOMAIN}-${THEDATE}
 INSTALLER_DIR="installer-${SHORTDATE}"
-SSH_KEY="${HOME)/.ssh/id_rsa-${BASE_DOMAIN}.pub"
+SSH_KEY_FILE="${HOME}/.ssh/id_rsa-${BASE_DOMAIN}.pub"
+SSH_KEY=$(cat $SSH_KEY_FILE)
+PULL_SECRET_FILE=~jradtke/Downloads/pull-secret.txt
+PULL_SECRET=$(cat $PULL_SECRET_FILE)
+
 [ ! -d ${OCP4_BASE} ] && { mkdir ${OCP4_BASE}; cd $_; } || { cd ${OCP4_BASE}; }
 ```
 

@@ -38,6 +38,7 @@ for FILE in openshift-install-*.tar.gz openshift-client-*.tar.gz; do tar -xvzf $
 which tmux || yum -y install tmux
 cd ${HOME}/OCP4/
 tmux new -s OCP4install || tmux attach -t OCP4install
+```
 
 ### Set ENVIRONMENT VARS
 ```

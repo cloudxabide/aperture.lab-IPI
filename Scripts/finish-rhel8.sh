@@ -12,7 +12,7 @@ then
 fi
 
 # Subscription and Repository Management (Red Hat)
-subscription-manager status || { subscription-manager register --auto-attach; }
+subscription-manager status || { subscription-manager register --auto-attach --force; }
 subscription-manager repos --disable="*" --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
 syspurpose set-role "Red Hat Enterprise Linux Server" 
 syspurpose set-sla "Self-Support" 
@@ -60,7 +60,7 @@ sed --in-place 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+NOPASSWD:\s\+ALL\)/\1/' /etc/sud
 # PACKAGE MANAGEMENT
 # * * * * * * * * * * * *
 SYS_PKGS="audit autofs dstat expect gcc git glibc hddtemp intltool iotop kernel-headers kernel-devel lm_sensors nmap openssh-askpass policycoreutils-gui powertop sysfsutils sysstat tuned xorg-x11-xauth"
-DEV_PKGS="python-lxml ansible"
+DEV_PKGS="python3-lxml ansible"
 DESKTOP_PKGS="google-chrome-stable java-*-openjdk icedtea-web gimp"
 GNOME_PKGS="gnome-tweak-tool gnome-common"
 
@@ -100,11 +100,11 @@ plymouth-set-default-theme solar
 # * * * * * * * * * * * *
 # Setup Custom Build/Test Environment
 # * * * * * * * * * * * *
-$YUM -y install virt-install virt-manager
+$YUM -y install virt-install virt-manager libguestfs-tools
 systemctl enable libvirtd.service
 
 # Create BIND mount for Libvirt Guests
-mkdir /home/images /home/openshift-images
+mkdir /home/images /home/openshift-images  /var/lib/libvirt/openshift-images
 
 echo "# BIND Mount for Libvirt Guests" >> /etc/fstab
 echo "/home/images /var/lib/libvirt/images none bind,defaults 0 0" >> /etc/fstab

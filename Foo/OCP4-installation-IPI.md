@@ -78,7 +78,7 @@ sudo systemctl reload NetworkManager
 ### SSH tweaks
 I create a separate SSH key just for this lab stuff (${HOME}/.ssh/id_rsa-aperturelab
 ```
-echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-test
+echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-$BASE_DOMAIN
 ```
 
 I then create an entry in my SSH config to utilize that key and connect with the "core" user
@@ -86,7 +86,7 @@ I then create an entry in my SSH config to utilize that key and connect with the
 cat << EOF >> ${HOME}/.ssh/config 
 Host 192.168.126.*
   User core
-  IdentityFile ~/.ssh/id_rsa-aperturelab
+  IdentityFile ~/.ssh/id_rsa-${BASE_DOMAIN}
 EOF
 ```
 

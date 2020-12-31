@@ -49,6 +49,7 @@ BASE_DOMAIN=aperture.lab
 OCP4_BASE=${HOME}/OCP4/
 OCP4DIR=${OCP_BASE}/${CLUSTER_NAME}.${BASE_DOMAIN}-${THEDATE}
 INSTALLER_DIR="installer-${SHORTDATE}"
+SSH_KEY="${HOME)/.ssh/id_rsa-${BASE_DOMAIN}.pub"
 [ ! -d ${OCP4_BASE} ] && { mkdir ${OCP4_BASE}; cd $_; } || { cd ${OCP4_BASE}; }
 ```
 
@@ -116,7 +117,8 @@ vi install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml
 #./openshift-install create install-config --dir=${OCP4DIR}/ --log-level=info
 # Using the previously created install config....
 [ ! -d ${OCP4DIR}/ ] && mkdir ${OCP4DIR}/
-cp install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml $OCP4DIR/install-config.yaml
+cat << EOF > 
+install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml > $OCP4DIR/install-config.yaml
 ${INSTALLER_DIR}/bin/openshift-install create cluster --dir=${OCP4DIR}/ --log-level=debug
 sudo virsh net-list
 ssh -i ~/.ssh/id_rsa-aperturelab core@192.168.126.10

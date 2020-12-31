@@ -76,7 +76,7 @@ sudo systemctl reload NetworkManager
 ```
 
 ### SSH tweaks
-I create a separate SSH key just for this lab stuff (${HOME}/.ssh/id_rsa-aperturelab
+I create a separate SSH key just for this lab stuff (${HOME}/.ssh/id_rsa-${BASE_DOMAIN}
 ```
 echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-$BASE_DOMAIN
 ```
@@ -101,10 +101,10 @@ cd -
 ## Deploy (create) the cluster
 ```
 eval "$(ssh-agent -s)"
-ssh-add ${HOME}/.ssh/id_rsa-aperturelab
+ssh-add ${HOME}/.ssh/id_rsa-${BASE_DOMAIN}
 sed -i -e '/^192.168.126/d' ~/.ssh/known_hosts
 cd ${OCP4_BASE}
-[ ! -f install-config-libvirt-laptop.aperture.lab.yaml ] && { wget https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Files/install-config-libvirt-laptop.aperture.lab.yaml; echo "You need to update the config file found in this directory"; }
+[ ! -f install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml ] && { wget https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Files/install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml; echo "You need to update the config file found in this directory"; }
 
 # Update the following values
 #   platform.libvirt.network.if << This is the bridge that will be created

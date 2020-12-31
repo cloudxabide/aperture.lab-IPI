@@ -14,9 +14,9 @@ fi
 # Subscription and Repository Management (Red Hat)
 subscription-manager status || { subscription-manager register --auto-attach; }
 subscription-manager repos --disable="*" --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable "codeready-builder-for-rhel-8-$(uname -m)-rpms"
-syspurpose set-role="Red Hat Enterprise Linux Server" 
-syspurpose set-sla="Self-Support" 
-syspurpose set-usage="Development/Test"
+syspurpose set-role "Red Hat Enterprise Linux Server" 
+syspurpose set-sla "Self-Support" 
+syspurpose set-usage "Development/Test"
 
 # Third-Party Repository Management (EPEL, RPMfusion, Google, Adobe)
 $YUM -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm;
@@ -32,8 +32,6 @@ gpgcheck=1
 gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
 EOF
 rpm --import https://dl-ssl.google.com/linux/linux_signing_key.pub
-
-$YUM -y install http://linuxdownload.adobe.com/adobe-release/adobe-release-x86_64-1.0-1.noarch.rpm
 
 #####################
 # USER MAINTENANCE
@@ -63,22 +61,14 @@ sed --in-place 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+NOPASSWD:\s\+ALL\)/\1/' /etc/sud
 # * * * * * * * * * * * *
 SYS_PKGS="audit autofs dstat expect gcc git glibc hddtemp intltool iotop kernel-headers kernel-devel lm_sensors nmap openssh-askpass policycoreutils-gui powertop sysfsutils sysstat tuned xorg-x11-xauth"
 DEV_PKGS="python-lxml ansible"
-DESKTOP_PKGS="conky-manager google-chrome-stable java-*-openjdk icedtea-web gimp"
-DVD_PKGS="libdvdread libdvdnav gstreamer-plugins-ugly gstreamer-plugins-bad lsdvd gstreamer-ffmpeg xine-lib xine-lib-extras-freeworld mplayer smplayer vlc"
-AUDIO_PKGS="gstreamer1* gstreamer* gstreamer-plugins-good gstreamer-plugins-bad gstreamer-plugins-ugly phonon-backend-gstreamer gstreamer1-libav gstreamer1-plugins-ugly gstreamer1-plugins-bad-freeworld pulseaudio-equalizer pulseaudio-esound-compat.x86_64 alsa-plugins-pulseaudio"
+DESKTOP_PKGS="google-chrome-stable java-*-openjdk icedtea-web gimp"
 GNOME_PKGS="gnome-tweak-tool gnome-common"
-CD_RECORD="python-eyed3 abcde cd-discid lame cdparanoia"
 
-MISSING_PKGS="spice-client docky gnome-shell-extension-weather spice-gtk-python gnome-rdp rdesktop tomboy eclipse eclipse-pydev ccsm id3v2"
-MISSING_DESKTOP_PKGS="conky conky-manager libreoffice spice-xpi wireshark wireshark-gnome xscreensaver xscreensaver-extras-gss xscreensaver-gl-*"
 # INSTALL PACKAGES
 $YUM -y install $SYS_PKGS
 $YUM -y install $DESKTOP_PKGS
 $YUM -y install $DEV_PKGS
-$YUM -y install $DVD_PKGS
-$YUM -y install $AUDIO_PKGS
 $YUM -y install $GNOME_PKGS
-$YUM -y install $CD_RECORD
 
 # Optimize gnome-shell
 $YUM -y install gnome-shell-extension-*
@@ -114,11 +104,13 @@ $YUM -y install virt-install virt-manager
 systemctl enable libvirtd.service
 
 # Create BIND mount for Libvirt Guests
-mkdir /home/images
+mkdir /home/images /home/openshift-images
+
 echo "# BIND Mount for Libvirt Guests" >> /etc/fstab
 echo "/home/images /var/lib/libvirt/images none bind,defaults 0 0" >> /etc/fstab
+echo "/home/openshift-images /var/lib/libvirt/openshift-images none bind,defaults 0 0" >> /etc/fstab
 mount -a
-restorecon -RFvv /var/lib/libvirt/images
+restorecon -RFvv /var/lib/libvirt/*images
 
 # Customize Web Server
 $YUM -y install httpd php
@@ -136,8 +128,9 @@ firewall-cmd --reload
 rm -rf /var/www/html
 ln -s /home/jradtke/Repositories/cloudxabide/aperture.lab /var/www/html
 
-mkdir /var/www/OS/rhel-server-7.7-x86_64
-echo "/data/images/rhel-server-7.7-x86_64-dvd.iso /var/www/OS/rhel-server-7.7-x86_64 iso9660 defaults,nofail 0 0" >> /etc/fstab
+mkdir /var/www/OS/rhel-server-7.7-x86_64 /var/www/OS/rhel-8.3-x86_64
+echo "/home/images/rhel-server-7.7-x86_64-dvd.iso /var/www/OS/rhel-server-7.7-x86_64 iso9660 defaults,nofail 0 0" >> /etc/fstab
+echo "/home/images/rhel-8.3-x86_64-dvd.iso /var/www/OS/rhel-8.3-x86_64 iso9660 defaults,nofail 0 0" >> /etc/fstab
 mount -a
 
 # * * * * * * * * * * * *
@@ -149,15 +142,7 @@ sed -i -e 's/db.XY/db.US/' /etc/freshclam.conf
 sed -i -e 's/^Example/#Example/' /etc/clamd.d/scan.conf
 sed -i -e 's/#LocalSocket/LocalSocket/' /etc/clamd.d/scan.conf
 
-exit 0
-
-# * * * * * * * * * * * *
-# Multimedia
-# * * * * * * * * * * * *
-# Need to research this repo a bit.  
-$YUM -y install http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-$YUM -y install flash-plugin icedtea-web 
-$YUM -y install vlc smplayer ffmpeg HandBrake-{gui,cli} libdvdcss gstreamer{,1}-plugins-ugly gstreamer-plugins-bad-nonfree gstreamer1-plugins-bad-freeworld
-
+echo "NOTE: after the reboot login as your own user"
 $YUM -y update && shutdown now -r
 
+exit 0

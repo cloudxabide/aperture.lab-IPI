@@ -3,8 +3,7 @@ Repo for my OCP4 installation on my laptop.
 
 This *should* be a start-to-finish account of how to:   
 * Install RHEL 8.x from USB (also using a Kickstart Profile - hosted in Github)
-* Deploy necessary "infrastructure components" (HTTP, DHCP, DNS, PXE)  
-* Deploy OpenShift Container Platform 4.6 UPI on a laptop running RHEL 8.x
+* Deploy OpenShift Container Platform 4.6 IPI on a laptop running RHEL 8.x
 
 I'm kind of excited and annoyed at the same time.  I had hoped to just use the Libvirt IPI (still dev only), but I could not get it working.  
 

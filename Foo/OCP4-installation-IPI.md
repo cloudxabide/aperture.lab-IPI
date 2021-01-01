@@ -35,6 +35,7 @@ for FILE in openshift-install-*.tar.gz openshift-client-*.tar.gz; do tar -xvzf $
 ## Getting Started | Typical OCP4 Install
 ### Start your TMUX Session
 ```
+sudo -i 
 which tmux || yum -y install tmux
 cd ${HOME}/OCP4/
 tmux new -s OCP4install || tmux attach -t OCP4install
@@ -85,7 +86,7 @@ sudo systemctl reload NetworkManager
 ### SSH tweaks
 I create a separate SSH key just for this lab stuff (${HOME}/.ssh/id_rsa-${BASE_DOMAIN}
 ```
-echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-$BASE_DOMAIN
+[ ! -f ${HOME}/.ssh/id_rsa-$BASE_DOMAIN ] && { echo | ssh-keygen -trsa -b2048 -N '' -f ${HOME}/.ssh/id_rsa-$BASE_DOMAIN; }
 ```
 
 I then create an entry in my SSH config to utilize that key and connect with the "core" user
@@ -123,10 +124,10 @@ cd ${OCP4_BASE}
 # Using the previously created install config....
 [ ! -d ${OCP4DIR}/ ] && mkdir ${OCP4DIR}/
 envsubst < install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml > ${OCP4DIR}/install-config.yaml
+vi ${OCP4DIR}/install-config.yaml
 
 ${INSTALLER_DIR}/bin/openshift-install create cluster --dir=${OCP4DIR}/ --log-level=debug
 sudo virsh net-list
-
 
 ssh -i ~/.ssh/id_rsa-aperturelab core@192.168.126.10
   journalctl -b -f -u release-image.service -u bootkube.service

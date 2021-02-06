@@ -12,6 +12,8 @@ NOTE:  you don't *always* need to do this part.  It is here (mostly) as a refere
 ### Download the Installer and Client
 ```
 # TODO: instead of doing an rm, figure out how to rename it based on the version or something
+sudo -i
+mkdir ${HOME}/OCP4; cd $_
 FILES="openshift-install-linux.tar.gz openshift-client-linux.tar.gz"
 for FILE in $FILES
 do 
@@ -62,6 +64,9 @@ export BASE_DOMAIN BRIDGE_NAME SSH_KEY PULL_SECRET CLUSTER_NAME
 
 ## Initial Setup (should be done once)
 ```
+[ ! -f ${HOME}/.ssh/id_rsa.pub ] && { echo | ssh-keygen -trsa -b2048 -N ''; }
+grep "$(cat ${HOME}/.ssh/id_rsa.pub)" ~/.ssh/authorized_keys || { cat ${HOME}/.ssh/id_rsa.pub >> ${HOME}/.ssh/authorized_keys; chmod 0600 ${HOME}/.ssh/authorized_keys; }
+
 [ $(sysctl -n net.ipv4.ip_forward) != 1 ] && { echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-ipforward.conf; sudo sysctl -p /etc/sysctl.d/99-ipforward.conf; }
 
 systemctl stop libvirtd.service
@@ -112,7 +117,7 @@ eval "$(ssh-agent -s)"
 ssh-add ${HOME}/.ssh/id_rsa-${BASE_DOMAIN}
 sed -i -e '/^192.168.126/d' ~/.ssh/known_hosts
 cd ${OCP4_BASE}
-[ ! -f install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml ] && { wget https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Files/install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml; echo "You need to update the config file found in this directory"; }
+[ ! -f install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml ] && { wget https://raw.githubusercontent.com/cloudxabide/aperture.lab-IPI/main/Files/install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml; echo "You need to update the config file found in this directory"; }
 
 # Update the following values
 #   platform.libvirt.network.if << This is the bridge that will be created
@@ -123,6 +128,8 @@ cd ${OCP4_BASE}
 #./openshift-install create install-config --dir=${OCP4DIR}/ --log-level=info
 # Using the previously created install config....
 [ ! -d ${OCP4DIR}/ ] && mkdir ${OCP4DIR}/
+SSH_KEY=$(cat $SSH_KEY_FILE)
+PULL_SECRET=$(cat $PULL_SECRET_FILE)
 envsubst < install-config-libvirt-${CLUSTER_NAME}.${BASE_DOMAIN}.yaml > ${OCP4DIR}/install-config.yaml
 vi ${OCP4DIR}/install-config.yaml
 

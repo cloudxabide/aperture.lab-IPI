@@ -13,12 +13,12 @@ Install RHEL from the media you create
 Run the "finish script"
 ```
 sudo su -
-bash <(curl -s https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Scripts/finish-rhel8.sh)
+bash <(curl -s https://raw.githubusercontent.com/cloudxabide/aperture.lab-IPI/main/Scripts/finish-rhel8.sh)
 ```
 
 Update your desktop
 ```
-bash <(curl -s https://raw.githubusercontent.com/cloudxabide/aperture.lab/main/Scripts/update_desktop.sh)
+bash <(curl -s https://raw.githubusercontent.com/cloudxabide/aperture.lab-IPI/main/Scripts/update_desktop.sh)
 ```
 
 
